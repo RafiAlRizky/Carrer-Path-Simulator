@@ -1,0 +1,5 @@
+{
+  "name": "Career Path Simulator",
+  "description": "An AI-powered tool to help users explore potential career paths based on their interests, skills, and background. It provides a detailed simulation of career progression, required skills, salary prospects, and more.",
+  "requestFramePermissions": []
+}
