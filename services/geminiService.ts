@@ -1,24 +1,9 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
-// This function safely retrieves the API key. In a browser environment where 'process' is not defined,
-// it will not throw an error, but return undefined.
-const getApiKey = (): string | undefined => {
-  if (typeof process !== 'undefined') {
-    return process.env.API_KEY;
-  }
-  return undefined;
-};
-
-const apiKey = getApiKey();
-
-if (!apiKey) {
-  // Log a warning to the console for developers. This will not be visible to end-users unless they open dev tools.
-  console.warn("API_KEY environment variable not set. The application will show an error message to the user upon simulation attempt.");
-}
-
-const ai = apiKey ? new GoogleGenAI({ apiKey: apiKey }) : null;
+// NOTE: The API key is hardcoded as provided by the user to resolve a configuration error.
+// In a production environment, it's recommended to manage API keys securely, for example, through environment variables.
+const ai = new GoogleGenAI({ apiKey: "AIzaSyCGKPZI4kiGM52W4Xy1e6WmJ-uctlodHbA" });
 
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.
@@ -98,10 +83,6 @@ const schema = {
 };
 
 export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
-  if (!ai) {
-    throw new Error("API Key is not configured. Please ensure the API_KEY environment variable is set in your deployment environment.");
-  }
-
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -126,9 +107,6 @@ export const simulateCareerPath = async (userInput: string): Promise<CareerPath>
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    if (error instanceof Error && error.message.includes("API Key is not configured")) {
-        throw error;
-    }
     throw new Error("Failed to simulate career path. The AI may be busy or the request could not be processed. Please try again later.");
   }
 };
