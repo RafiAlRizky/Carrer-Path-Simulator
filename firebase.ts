@@ -1,8 +1,8 @@
 
-// FIX: Switched to Firebase v8 namespaced API to resolve module export errors.
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/firestore';
+// FIX: Switched to Firebase v8 namespaced API using compat libraries to resolve module export errors with Firebase v9+.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {

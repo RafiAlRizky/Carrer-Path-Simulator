@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-// FIX: Updated imports to use the Firebase v8 namespaced API.
-import firebase from 'firebase/app';
-import 'firebase/auth';
+// FIX: Updated imports to use the Firebase v8 namespaced API via compat layer.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 import { auth, googleAuthProvider } from '../firebase';
 import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { GoogleIcon } from './icons/GoogleIcon';
@@ -67,8 +67,8 @@ const Login: React.FC = () => {
 
     const handleEmailPasswordSubmit = async (email: string, pass: string) => {
         if (view === 'login') {
-            // FIX: Used the signInWithEmailAndPassword method from the v8 auth instance.
-            await handleAuthAction(auth.signInWithEmailAndPassword(auth, email, pass));
+            // FIX: Used the signInWithEmailAndPassword method from the v8 auth instance. Corrected method signature to remove extra argument.
+            await handleAuthAction(auth.signInWithEmailAndPassword(email, pass));
         } else {
             // FIX: Used the createUserWithEmailAndPassword and user.updateProfile methods from the v8 SDK.
             const action = auth.createUserWithEmailAndPassword(email, pass).then(userCredential => {
