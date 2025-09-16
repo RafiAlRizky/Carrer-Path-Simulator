@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
-// Fix: Remove direct imports of auth functions; they are now methods on the auth object.
-import type firebase from 'firebase/app';
+// FIX: Updated imports to use the Firebase v8 namespaced API.
+import firebase from 'firebase/app';
+import 'firebase/auth';
 import { auth, googleAuthProvider } from '../firebase';
 import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { GoogleIcon } from './icons/GoogleIcon';
@@ -21,7 +23,7 @@ const ArrowLeftIcon: React.FC<{className?: string}> = ({ className = 'w-6 h-6' }
 
 type AuthView = 'options' | 'login' | 'register';
 
-// Fix: Use firebase.auth.AuthError for v8 compatibility.
+// FIX: Corrected AuthError type to firebase.auth.AuthError for v8 compatibility.
 const getFirebaseErrorMessage = (error: firebase.auth.AuthError): string => {
     switch (error.code) {
         case 'auth/invalid-email':
@@ -53,22 +55,22 @@ const Login: React.FC = () => {
             await action;
         } catch (err) {
             console.error("Auth error:", err);
-            // Fix: Cast error to the correct v8 AuthError type.
+            // FIX: Corrected AuthError type casting for v8 compatibility.
             setError(getFirebaseErrorMessage(err as firebase.auth.AuthError));
             setIsLoading(false); // Ensure loading is stopped on error
         }
         // Don't set loading to false on success, as the component will unmount
     }
 
-    // Fix: Use auth.signInWithPopup method from the v8 auth service.
+    // FIX: Used the signInWithPopup method from the v8 auth instance.
     const handleGoogleLogin = () => handleAuthAction(auth.signInWithPopup(googleAuthProvider));
 
     const handleEmailPasswordSubmit = async (email: string, pass: string) => {
         if (view === 'login') {
-            // Fix: Use auth.signInWithEmailAndPassword method from the v8 auth service.
-            await handleAuthAction(auth.signInWithEmailAndPassword(email, pass));
+            // FIX: Used the signInWithEmailAndPassword method from the v8 auth instance.
+            await handleAuthAction(auth.signInWithEmailAndPassword(auth, email, pass));
         } else {
-            // Fix: Use auth.createUserWithEmailAndPassword and user.updateProfile methods.
+            // FIX: Used the createUserWithEmailAndPassword and user.updateProfile methods from the v8 SDK.
             const action = auth.createUserWithEmailAndPassword(email, pass).then(userCredential => {
               if (userCredential.user) {
                   const nameFromEmail = email.substring(0, email.indexOf('@'));

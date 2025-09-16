@@ -1,6 +1,6 @@
-// Fix: Use Firebase v8 namespaced import
+
+// FIX: Switched to Firebase v8 namespaced API to resolve module export errors.
 import firebase from 'firebase/app';
-// Fix: Import auth and firestore for side effects
 import 'firebase/auth';
 import 'firebase/firestore';
 
@@ -15,14 +15,12 @@ const firebaseConfig = {
     measurementId: "G-RM53MD5YNE"
 };
 
-// Initialize Firebase
-// Fix: Use v8 initialization syntax and prevent re-initialization
+// Initialize Firebase, preventing re-initialization
 if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig);
 }
 
-// Export services
-// Fix: Use v8 namespaced exports
+// Export services using v8 syntax
 export const auth = firebase.auth();
 export const firestore = firebase.firestore();
 export const googleAuthProvider = new firebase.auth.GoogleAuthProvider();

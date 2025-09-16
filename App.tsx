@@ -1,11 +1,11 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-// Fix: Import firebase for the User type, instead of importing User directly.
-import type firebase from 'firebase/app';
-// Fix: Remove direct imports of auth functions; they are now methods on the auth object.
+// FIX: Updated imports to use the Firebase v8 namespaced API, which resolves the module export errors.
+import firebase from 'firebase/app';
+import 'firebase/auth';
 import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
 import { getUserHistory, addSimulationToHistory, deleteHistoryItem, clearUserHistory } from './services/firestoreService';
-// Fix: `auth` is now the v8 auth service instance.
 import { auth } from './firebase';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
@@ -19,7 +19,7 @@ import Login from './components/Login';
 const API_KEY = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
 
 const App: React.FC = () => {
-  // Fix: Use the namespaced firebase.User type.
+  // FIX: Switched to firebase.User type from the v8 SDK.
   const [user, setUser] = useState<firebase.User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [userInput, setUserInput] = useState<string>('');
@@ -31,7 +31,7 @@ const App: React.FC = () => {
   const isApiConfigured = !!API_KEY;
 
   useEffect(() => {
-    // Fix: Use the onAuthStateChanged method from the v8 auth service object.
+    // FIX: Used the onAuthStateChanged method from the v8 auth instance.
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
@@ -94,7 +94,7 @@ const App: React.FC = () => {
   }, [isApiConfigured, user]);
   
   const handleLogout = () => {
-    // Fix: Use the signOut method from the v8 auth service object.
+    // FIX: Used the signOut method from the v8 auth instance.
     auth.signOut().catch((error) => console.error('Logout failed', error));
   };
 

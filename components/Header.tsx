@@ -1,13 +1,15 @@
+
 import React from 'react';
-// Fix: Import firebase for the User type, instead of importing User directly.
-import type firebase from 'firebase/app';
+// FIX: Imported the firebase object to use its User type, aligning with the v8 SDK.
+import firebase from 'firebase/app';
 
 interface HeaderProps {
-  // Fix: Use the namespaced firebase.User type.
+  // FIX: Switched to firebase.User type from the v8 SDK.
   user: firebase.User;
   onLogout: () => void;
 }
 
+// FIX: Switched to firebase.User type from the v8 SDK.
 const Avatar: React.FC<{ user: firebase.User }> = ({ user }) => {
   if (user.photoURL) {
     return <img src={user.photoURL} alt="User" className="w-12 h-12 rounded-full border-2 border-indigo-500 object-cover"/>;
