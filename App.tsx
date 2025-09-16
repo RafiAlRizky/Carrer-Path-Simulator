@@ -8,8 +8,10 @@ import CareerPathDisplay from './components/CareerPathDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import Welcome from './components/Welcome';
+import Login from './components/Login';
 
 const App: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -34,11 +36,27 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [userInput]);
+  
+  const handleLogin = (success: boolean) => {
+    setIsLoggedIn(success);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    // Reset app state
+    setUserInput('');
+    setCareerPathData(null);
+    setError(null);
+  };
+
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Header />
+        <Header onLogout={handleLogout} />
         <main>
           <InputForm
             userInput={userInput}

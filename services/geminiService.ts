@@ -1,9 +1,8 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
-// NOTE: The API key is hardcoded as provided by the user to resolve a configuration error.
-// In a production environment, it's recommended to manage API keys securely, for example, through environment variables.
-const ai = new GoogleGenAI({ apiKey: "AIzaSyCGKPZI4kiGM52W4Xy1e6WmJ-uctlodHbA" });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.

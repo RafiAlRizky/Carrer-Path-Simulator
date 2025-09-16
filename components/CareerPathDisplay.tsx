@@ -55,11 +55,11 @@ const CareerPathDisplay: React.FC<CareerPathDisplayProps> = ({ data }) => {
       </SectionCard>
       
       <SectionCard title="Timeline Perjalanan Karir" icon={<TimelineIcon />}>
-        <div className="relative border-l-2 border-cyan-700 ml-4 pl-8 space-y-8">
+        <div className="relative border-l-2 border-indigo-700 ml-4 pl-8 space-y-8">
           {data.timeline.map((item, index) => (
             <div key={index} className="relative">
-              <div className="absolute -left-[39px] top-1 h-4 w-4 bg-cyan-500 rounded-full border-4 border-gray-800"></div>
-              <p className="font-semibold text-cyan-400">{item.duration} - <span className="text-white">{item.role}</span></p>
+              <div className="absolute -left-[39px] top-1 h-4 w-4 bg-indigo-500 rounded-full border-4 border-gray-800"></div>
+              <p className="font-semibold text-indigo-400">{item.duration} - <span className="text-white">{item.role}</span></p>
               <p className="text-gray-400">{item.description}</p>
             </div>
           ))}
@@ -71,11 +71,11 @@ const CareerPathDisplay: React.FC<CareerPathDisplayProps> = ({ data }) => {
           <div className="space-y-3">
               <div className="flex items-start">
                   <span className="font-semibold text-gray-300 w-24 shrink-0">Indonesia:</span>
-                  <span className="text-cyan-400 font-mono">{data.prospects.indonesia}</span>
+                  <span className="text-indigo-400 font-mono">{data.prospects.indonesia}</span>
               </div>
               <div className="flex items-start">
                   <span className="font-semibold text-gray-300 w-24 shrink-0">Global:</span>
-                  <span className="text-cyan-400 font-mono">{data.prospects.global}</span>
+                  <span className="text-indigo-400 font-mono">{data.prospects.global}</span>
               </div>
               <div className="flex items-start">
                   <span className="font-semibold text-gray-300 w-24 shrink-0">Permintaan:</span>

@@ -51,7 +51,7 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skills, endorsedSkills, onEndorse
             <SkillColumn 
                 title="Fundamental" 
                 skills={skills.fundamental} 
-                color="text-cyan-400" 
+                color="text-indigo-400" 
                 delay={0.2}
                 endorsedSkills={endorsedSkills}
                 onEndorse={onEndorse}
@@ -62,7 +62,7 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skills, endorsedSkills, onEndorse
             <SkillColumn 
                 title="Intermediate" 
                 skills={skills.intermediate} 
-                color="text-blue-400" 
+                color="text-purple-400" 
                 delay={0.6}
                 endorsedSkills={endorsedSkills}
                 onEndorse={onEndorse}
@@ -73,7 +73,7 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skills, endorsedSkills, onEndorse
             <SkillColumn 
                 title="Advanced" 
                 skills={skills.advanced} 
-                color="text-indigo-400" 
+                color="text-fuchsia-400" 
                 delay={1.0}
                 endorsedSkills={endorsedSkills}
                 onEndorse={onEndorse}
