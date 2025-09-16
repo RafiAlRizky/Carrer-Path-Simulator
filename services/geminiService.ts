@@ -2,8 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.
 Tugas Anda adalah memberikan jawaban dalam format JSON yang terstruktur sesuai skema yang diberikan, berdasarkan input dari pengguna.
@@ -82,6 +80,7 @@ const schema = {
 };
 
 export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
