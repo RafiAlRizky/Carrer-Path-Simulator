@@ -10,8 +10,6 @@ import ErrorMessage from './components/ErrorMessage';
 import Welcome from './components/Welcome';
 import HistoryList from './components/HistoryList';
 
-const API_KEY = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
-
 const App: React.FC = () => {
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
@@ -19,8 +17,6 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
   
-  const isApiConfigured = !!API_KEY;
-
   // Load history from localStorage on initial render
   useEffect(() => {
     try {
@@ -44,10 +40,6 @@ const App: React.FC = () => {
   }, [history]);
 
   const handleSimulate = useCallback(async (simulationQuery: string) => {
-    if (!isApiConfigured) {
-      setError('Configuration Error: The API key is missing.');
-      return;
-    }
     if (!simulationQuery.trim()) {
       setError('Please enter a career path or interest to simulate.');
       return;
@@ -73,7 +65,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isApiConfigured]);
+  }, []);
   
   const handleFormSubmit = useCallback(() => {
     handleSimulate(userInput);
@@ -104,17 +96,11 @@ const App: React.FC = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Header />
         <main>
-          {!isApiConfigured && (
-             <div className="mb-4">
-               <ErrorMessage message="Configuration Error: The application is not properly configured. An API key is required to use the simulation service." />
-             </div>
-          )}
           <InputForm
             userInput={userInput}
             setUserInput={setUserInput}
             onSimulate={handleFormSubmit}
             isLoading={isLoading}
-            disabled={!isApiConfigured}
           />
           <div className="mt-8">
             {isLoading && <LoadingSpinner />}

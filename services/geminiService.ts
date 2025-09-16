@@ -2,6 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
+// Hardcoded the API key provided by the user to resolve the deployment error.
+const API_KEY = "AIzaSyCGKPZI4kiGM52W4Xy1e6WmJ-uctlodHbA";
+
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.
 Tugas Anda adalah memberikan jawaban dalam format JSON yang terstruktur sesuai skema yang diberikan, berdasarkan input dari pengguna.
@@ -80,14 +83,7 @@ const schema = {
 };
 
 export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    console.error("API Key is missing.");
-    // This specific error message will be shown to the user.
-    throw new Error("Kesalahan Konfigurasi: Kunci API tidak ditemukan. Harap konfigurasikan variabel lingkungan API_KEY.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -112,9 +108,6 @@ export const simulateCareerPath = async (userInput: string): Promise<CareerPath>
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    if (error instanceof Error && error.message.startsWith("Kesalahan Konfigurasi")) {
-      throw error;
-    }
     throw new Error("Gagal menyimulasikan jalur karir. AI mungkin sedang sibuk atau permintaan tidak dapat diproses. Silakan coba lagi nanti.");
   }
 };
