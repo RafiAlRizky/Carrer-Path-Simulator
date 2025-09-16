@@ -1,6 +1,8 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+// Fix: Use Firebase v8 namespaced import
+import firebase from 'firebase/app';
+// Fix: Import auth and firestore for side effects
+import 'firebase/auth';
+import 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -14,9 +16,13 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Fix: Use v8 initialization syntax and prevent re-initialization
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 // Export services
-export const auth = getAuth(app);
-export const firestore = getFirestore(app);
-export const googleAuthProvider = new GoogleAuthProvider();
+// Fix: Use v8 namespaced exports
+export const auth = firebase.auth();
+export const firestore = firebase.firestore();
+export const googleAuthProvider = new firebase.auth.GoogleAuthProvider();

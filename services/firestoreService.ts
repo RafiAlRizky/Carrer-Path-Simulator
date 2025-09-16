@@ -1,16 +1,5 @@
 import { firestore } from '../firebase';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  addDoc,
-  deleteDoc,
-  doc,
-  writeBatch,
-} from 'firebase/firestore';
+// Fix: Remove v9 modular imports for firestore.
 import type { SimulationHistoryItem } from '../types';
 
 const HISTORY_COLLECTION = 'simulations';
@@ -19,14 +8,14 @@ type NewHistoryData = Omit<SimulationHistoryItem, 'id'>;
 
 // Get user's simulation history
 export const getUserHistory = async (userId: string): Promise<SimulationHistoryItem[]> => {
-  const historyRef = collection(firestore, HISTORY_COLLECTION);
-  const q = query(
-    historyRef,
-    where('userId', '==', userId),
-    orderBy('timestamp', 'desc'),
-    limit(50)
-  );
-  const querySnapshot = await getDocs(q);
+  // Fix: Use v8 collection and query syntax.
+  const historyRef = firestore.collection(HISTORY_COLLECTION);
+  const q = historyRef
+    .where('userId', '==', userId)
+    .orderBy('timestamp', 'desc')
+    .limit(50);
+  // Fix: Use .get() method on the query.
+  const querySnapshot = await q.get();
   return querySnapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
@@ -35,28 +24,33 @@ export const getUserHistory = async (userId: string): Promise<SimulationHistoryI
 
 // Add a new item to history
 export const addSimulationToHistory = async (data: NewHistoryData): Promise<string> => {
-  const historyRef = collection(firestore, HISTORY_COLLECTION);
-  const docRef = await addDoc(historyRef, data);
+  // Fix: Use v8 collection and add syntax.
+  const historyRef = firestore.collection(HISTORY_COLLECTION);
+  const docRef = await historyRef.add(data);
   return docRef.id;
 };
 
 // Delete a single history item
 export const deleteHistoryItem = async (itemId: string): Promise<void> => {
-  const itemDocRef = doc(firestore, HISTORY_COLLECTION, itemId);
-  await deleteDoc(itemDocRef);
+  // Fix: Use v8 document reference and delete syntax.
+  const itemDocRef = firestore.collection(HISTORY_COLLECTION).doc(itemId);
+  await itemDocRef.delete();
 };
 
 // Clear all history for a user
 export const clearUserHistory = async (userId: string): Promise<void> => {
-    const historyRef = collection(firestore, HISTORY_COLLECTION);
-    const q = query(historyRef, where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
+    // Fix: Use v8 collection and query syntax.
+    const historyRef = firestore.collection(HISTORY_COLLECTION);
+    const q = historyRef.where('userId', '==', userId);
+    // Fix: Use .get() method on the query.
+    const querySnapshot = await q.get();
     
     if (querySnapshot.empty) {
         return;
     }
 
-    const batch = writeBatch(firestore);
+    // Fix: Use v8 batch syntax.
+    const batch = firestore.batch();
     querySnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
     });

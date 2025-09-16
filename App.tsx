@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import type { User } from 'firebase/auth';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+// Fix: Import firebase for the User type, instead of importing User directly.
+import type firebase from 'firebase/app';
+// Fix: Remove direct imports of auth functions; they are now methods on the auth object.
 import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
 import { getUserHistory, addSimulationToHistory, deleteHistoryItem, clearUserHistory } from './services/firestoreService';
+// Fix: `auth` is now the v8 auth service instance.
 import { auth } from './firebase';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
@@ -17,7 +19,8 @@ import Login from './components/Login';
 const API_KEY = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  // Fix: Use the namespaced firebase.User type.
+  const [user, setUser] = useState<firebase.User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
@@ -28,7 +31,8 @@ const App: React.FC = () => {
   const isApiConfigured = !!API_KEY;
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    // Fix: Use the onAuthStateChanged method from the v8 auth service object.
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
     });
@@ -90,7 +94,8 @@ const App: React.FC = () => {
   }, [isApiConfigured, user]);
   
   const handleLogout = () => {
-    signOut(auth).catch((error) => console.error('Logout failed', error));
+    // Fix: Use the signOut method from the v8 auth service object.
+    auth.signOut().catch((error) => console.error('Logout failed', error));
   };
 
   const handleFormSubmit = useCallback(() => {
