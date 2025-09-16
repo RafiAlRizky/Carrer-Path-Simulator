@@ -24,3 +24,10 @@ export interface CareerPath {
   alternatives: string[];
   tips: string[];
 }
+
+export interface SimulationHistoryItem {
+  id: string;
+  query: string;
+  result: CareerPath;
+  timestamp: string;
+}

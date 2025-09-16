@@ -80,7 +80,14 @@ const schema = {
 };
 
 export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.error("API Key is missing.");
+    // This specific error message will be shown to the user.
+    throw new Error("Kesalahan Konfigurasi: Kunci API tidak ditemukan. Harap konfigurasikan variabel lingkungan API_KEY.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -98,13 +105,16 @@ export const simulateCareerPath = async (userInput: string): Promise<CareerPath>
     
     // Validation to ensure the parsed data matches the expected structure
     if (!parsedData.summary || !parsedData.skills || !Array.isArray(parsedData.skills.fundamental)) {
-      throw new Error("Received malformed data from API.");
+      throw new Error("Menerima data yang tidak sesuai format dari API.");
     }
 
     return parsedData as CareerPath;
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    throw new Error("Failed to simulate career path. The AI may be busy or the request could not be processed. Please try again later.");
+    if (error instanceof Error && error.message.startsWith("Kesalahan Konfigurasi")) {
+      throw error;
+    }
+    throw new Error("Gagal menyimulasikan jalur karir. AI mungkin sedang sibuk atau permintaan tidak dapat diproses. Silakan coba lagi nanti.");
   }
 };

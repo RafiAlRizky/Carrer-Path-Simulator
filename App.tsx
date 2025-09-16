@@ -1,24 +1,67 @@
-
-import React, { useState, useCallback } from 'react';
-import type { CareerPath } from './types';
+import React, { useState, useCallback, useEffect } from 'react';
+import type { User } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
+import { getUserHistory, addSimulationToHistory, deleteHistoryItem, clearUserHistory } from './services/firestoreService';
+import { auth } from './firebase';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
 import CareerPathDisplay from './components/CareerPathDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import Welcome from './components/Welcome';
+import HistoryList from './components/HistoryList';
 import Login from './components/Login';
 
+const API_KEY = typeof process !== 'undefined' && process.env ? process.env.API_KEY : undefined;
+
 const App: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
+  
+  const isApiConfigured = !!API_KEY;
 
-  const handleSimulate = useCallback(async () => {
-    if (!userInput.trim()) {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      const fetchHistory = async () => {
+        try {
+          const userHistory = await getUserHistory(user.uid);
+          setHistory(userHistory);
+        } catch (e) {
+          console.error("Failed to load history from Firestore:", e);
+          setError("Gagal memuat riwayat simulasi Anda.");
+        }
+      };
+      fetchHistory();
+    } else {
+      setHistory([]); // Clear history on logout
+    }
+  }, [user]);
+
+  const handleSimulate = useCallback(async (simulationQuery: string) => {
+    if (!user) {
+      setError('Anda harus login untuk memulai simulasi.');
+      return;
+    }
+    if (!isApiConfigured) {
+      setError('Configuration Error: The API key is missing.');
+      return;
+    }
+    if (!simulationQuery.trim()) {
       setError('Please enter a career path or interest to simulate.');
       return;
     }
@@ -28,41 +71,89 @@ const App: React.FC = () => {
     setCareerPathData(null);
 
     try {
-      const data = await simulateCareerPath(userInput);
+      const data = await simulateCareerPath(simulationQuery);
       setCareerPathData(data);
+      
+      const newHistoryItem = {
+        query: simulationQuery,
+        result: data,
+        timestamp: new Date().toISOString(),
+        userId: user.uid,
+      };
+      const addedItemId = await addSimulationToHistory(newHistoryItem);
+      setHistory(prevHistory => [{ ...newHistoryItem, id: addedItemId }, ...prevHistory].slice(0, 50));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, [userInput]);
+  }, [isApiConfigured, user]);
   
-  const handleLogin = (success: boolean) => {
-    setIsLoggedIn(success);
-  };
-
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    // Reset app state
-    setUserInput('');
-    setCareerPathData(null);
-    setError(null);
+    signOut(auth).catch((error) => console.error('Logout failed', error));
   };
 
-  if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+  const handleFormSubmit = useCallback(() => {
+    handleSimulate(userInput);
+  }, [userInput, handleSimulate]);
+
+  const handleViewHistory = (item: SimulationHistoryItem) => {
+    setError(null);
+    setCareerPathData(item.result);
+    setUserInput(item.query);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleResimulate = (item: SimulationHistoryItem) => {
+    setUserInput(item.query);
+    handleSimulate(item.query);
+  };
+  
+  const handleDeleteHistory = async (id: string) => {
+    try {
+        await deleteHistoryItem(id);
+        setHistory(prev => prev.filter(item => item.id !== id));
+    } catch (e) {
+        console.error("Failed to delete history item:", e);
+        setError("Gagal menghapus item riwayat.");
+    }
+  };
+  
+  const handleClearHistory = async () => {
+    if (!user) return;
+    try {
+        await clearUserHistory(user.uid);
+        setHistory([]);
+    } catch (e) {
+        console.error("Failed to clear history:", e);
+        setError("Gagal membersihkan riwayat.");
+    }
+  };
+  
+  if (authLoading) {
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><LoadingSpinner /></div>;
+  }
+  
+  if (!user) {
+    return <Login />;
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Header onLogout={handleLogout} />
+        <Header user={user} onLogout={handleLogout} />
         <main>
+          {!isApiConfigured && (
+             <div className="mb-4">
+               <ErrorMessage message="Configuration Error: The application is not properly configured. An API key is required to use the simulation service." />
+             </div>
+          )}
           <InputForm
             userInput={userInput}
             setUserInput={setUserInput}
-            onSimulate={handleSimulate}
+            onSimulate={handleFormSubmit}
             isLoading={isLoading}
+            disabled={!isApiConfigured}
           />
           <div className="mt-8">
             {isLoading && <LoadingSpinner />}
@@ -73,6 +164,14 @@ const App: React.FC = () => {
               !isLoading && !error && <Welcome />
             )}
           </div>
+          <HistoryList 
+            items={history}
+            onView={handleViewHistory}
+            onResimulate={handleResimulate}
+            onDelete={handleDeleteHistory}
+            onClear={handleClearHistory}
+            disabled={isLoading}
+          />
         </main>
       </div>
     </div>
