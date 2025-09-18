@@ -15,8 +15,15 @@ import ConfigurationError from './components/ConfigurationError';
 // App no longer needs props since user auth is removed
 const App: React.FC = () => {
   // Check for API Key configuration first.
-  // FIX: Adhering to the Gemini API guidelines to use `process.env.API_KEY` which resolves the `import.meta.env` TypeScript error.
-  if (!process.env.API_KEY || process.env.API_KEY === "") {
+  let apiKey: string | undefined;
+  try {
+    apiKey = process.env.API_KEY;
+  } catch (e) {
+    // This will happen if 'process' is not defined, e.g., in a browser environment without a bundler.
+    apiKey = undefined;
+  }
+  
+  if (!apiKey || apiKey === "") {
     return <ConfigurationError />;
   }
 

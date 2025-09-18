@@ -2,8 +2,17 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
 // Initialize the Google AI client once with the API key from environment variables.
-// FIX: Adhering to the Gemini API guidelines to use `process.env.API_KEY` which resolves the `import.meta.env` TypeScript error.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let ai: GoogleGenAI | null = null;
+try {
+  const apiKey = process.env.API_KEY;
+  if (apiKey) {
+    ai = new GoogleGenAI({ apiKey: apiKey });
+  }
+} catch (e) {
+  // `process` is not defined in this environment.
+  // The app will show a configuration error screen.
+  console.warn("Could not initialize Gemini AI: process.env.API_KEY is not accessible.");
+}
 
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.
@@ -83,6 +92,10 @@ const schema = {
 };
 
 export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
+  if (!ai) {
+    throw new Error("Klien Gemini AI tidak diinisialisasi. Periksa konfigurasi API Key Anda di environment variables.");
+  }
+  
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -107,7 +120,7 @@ export const simulateCareerPath = async (userInput: string): Promise<CareerPath>
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    if (error instanceof Error && error.message.includes('PERMISSION_DENIED')) {
+    if (error instanceof Error && (error.message.includes('PERMISSION_DENIED') || error.message.includes('API key'))) {
       throw new Error("Izin API ditolak. Pastikan API Key Anda valid dan Gemini API telah diaktifkan untuk proyek Anda.");
     }
     throw new Error("Gagal menyimulasikan jalur karir. AI mungkin sedang sibuk atau permintaan tidak dapat diproses. Silakan coba lagi nanti.");
