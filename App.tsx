@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
-import { getHistory, saveHistory } from './services/localStorageService';
+// Import from local storage service instead of firestore
+import { getHistory, addSimulationToHistory, deleteHistoryItem, clearHistory } from './services/localStorageService';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
 import CareerPathDisplay from './components/CareerPathDisplay';
@@ -11,6 +12,7 @@ import Welcome from './components/Welcome';
 import HistoryList from './components/HistoryList';
 import ConfigurationError from './components/ConfigurationError';
 
+// App no longer needs props since user auth is removed
 const App: React.FC = () => {
   // Check for API Key configuration first.
   // FIX: Adhering to the Gemini API guidelines to use `process.env.API_KEY` which resolves the `import.meta.env` TypeScript error.
@@ -25,8 +27,15 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
 
   useEffect(() => {
-    // Load history from local storage on initial render
-    setHistory(getHistory());
+    // Load history from localStorage on initial render.
+    // This is now a synchronous operation.
+    try {
+        const localHistory = getHistory();
+        setHistory(localHistory);
+    } catch (err) {
+        setError("Gagal memuat riwayat simulasi dari penyimpanan lokal.");
+        console.error(err);
+    }
   }, []);
 
   const handleSimulate = useCallback(async (simulationQuery: string) => {
@@ -44,16 +53,17 @@ const App: React.FC = () => {
       const data = await simulateCareerPath(simulationQuery);
       setCareerPathData(data);
       
-      const newHistoryItem: SimulationHistoryItem = {
-        id: new Date().toISOString(),
+      const newHistoryData: Omit<SimulationHistoryItem, 'id'> = {
         query: simulationQuery,
         timestamp: new Date().toISOString(),
         result: data,
       };
+
+      // Add to local storage history
+      const newHistoryItem = addSimulationToHistory(newHistoryData);
       
-      const updatedHistory = [newHistoryItem, ...history];
-      setHistory(updatedHistory);
-      saveHistory(updatedHistory);
+      // No need to re-read from storage, just update state
+      setHistory(prevHistory => [newHistoryItem, ...prevHistory]);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
@@ -84,15 +94,25 @@ const App: React.FC = () => {
   };
 
   const handleDeleteHistory = (id: string) => {
-    const updatedHistory = history.filter(item => item.id !== id);
-    setHistory(updatedHistory);
-    saveHistory(updatedHistory);
+    try {
+      deleteHistoryItem(id);
+      const updatedHistory = history.filter(item => item.id !== id);
+      setHistory(updatedHistory);
+    } catch (e) {
+      console.error("Failed to delete history item:", e);
+      setError("Gagal menghapus item riwayat. Silakan coba lagi.");
+    }
   };
 
   const handleClearHistory = () => {
     if (window.confirm('Anda yakin ingin menghapus semua riwayat simulasi?')) {
-      setHistory([]);
-      saveHistory([]);
+      try {
+        clearHistory();
+        setHistory([]);
+      } catch(e) {
+        console.error("Failed to clear history:", e);
+        setError("Gagal membersihkan riwayat. Silakan coba lagi.");
+      }
     }
   };
 

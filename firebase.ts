@@ -15,14 +15,20 @@ const firebaseConfig = {
     measurementId: "YOUR_MEASUREMENT_ID"
 };
 
+// Function to check if config is still placeholder
+export const isFirebaseConfigured = (): boolean => {
+    return firebaseConfig.apiKey !== "YOUR_API_KEY" && firebaseConfig.projectId !== "YOUR_PROJECT_ID";
+};
+
+
 // Initialize Firebase, preventing re-initialization.
 // FIX: Added a guard to prevent initialization with placeholder credentials, which crashes the app on deployment.
-if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY" && !firebase.apps.length) {
+if (isFirebaseConfigured() && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
 
-// Export services using v8 syntax
-export const firestore = firebase.firestore();
-export const auth = firebase.auth();
-export const googleProvider = new firebase.auth.GoogleAuthProvider();
+// Export services using v8 syntax, guarded by config check
+export const firestore = isFirebaseConfigured() ? firebase.firestore() : null!;
+export const auth = isFirebaseConfigured() ? firebase.auth() : null!;
+export const googleProvider = isFirebaseConfigured() ? new firebase.auth.GoogleAuthProvider() : null!;
