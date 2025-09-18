@@ -1,9 +1,8 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
 // Initialize the Google AI client once with the API key from environment variables.
-// This is more secure and efficient than creating a new instance for each request.
+// FIX: Adhering to the Gemini API guidelines to use `process.env.API_KEY` which resolves the `import.meta.env` TypeScript error.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const systemInstruction = `

@@ -12,7 +12,8 @@ import HistoryList from './components/HistoryList';
 import ConfigurationError from './components/ConfigurationError';
 
 const App: React.FC = () => {
-  // Check for API Key configuration first. This is crucial for deployment environments.
+  // Check for API Key configuration first.
+  // FIX: Adhering to the Gemini API guidelines to use `process.env.API_KEY` which resolves the `import.meta.env` TypeScript error.
   if (!process.env.API_KEY || process.env.API_KEY === "") {
     return <ConfigurationError />;
   }
