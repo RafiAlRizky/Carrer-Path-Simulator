@@ -1,3 +1,4 @@
+
 export interface CareerPathTimelineItem {
   duration: string;
   role: string;
@@ -28,6 +29,6 @@ export interface CareerPath {
 export interface SimulationHistoryItem {
   id: string;
   query: string;
-  result: CareerPath;
   timestamp: string;
+  result: CareerPath;
 }

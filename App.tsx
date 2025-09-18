@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
+import { getHistory, saveHistory } from './services/localStorageService';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
 import CareerPathDisplay from './components/CareerPathDisplay';
@@ -16,28 +17,11 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
-  
-  // Load history from localStorage on initial render
-  useEffect(() => {
-    try {
-      const storedHistory = localStorage.getItem('simulationHistory');
-      if (storedHistory) {
-        setHistory(JSON.parse(storedHistory));
-      }
-    } catch (e) {
-      console.error("Failed to load history from localStorage:", e);
-      setError("Gagal memuat riwayat simulasi Anda.");
-    }
-  }, []);
 
-  // Save history to localStorage whenever it changes
   useEffect(() => {
-    try {
-      localStorage.setItem('simulationHistory', JSON.stringify(history));
-    } catch (e) {
-      console.error("Failed to save history to localStorage:", e);
-    }
-  }, [history]);
+    // Load history from local storage on initial render
+    setHistory(getHistory());
+  }, []);
 
   const handleSimulate = useCallback(async (simulationQuery: string) => {
     if (!simulationQuery.trim()) {
@@ -48,47 +32,62 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setCareerPathData(null);
+    window.scrollTo(0, 0); // Scroll to top for better UX
 
     try {
       const data = await simulateCareerPath(simulationQuery);
       setCareerPathData(data);
       
       const newHistoryItem: SimulationHistoryItem = {
-        id: `hist_${new Date().getTime()}`,
+        id: new Date().toISOString(),
         query: simulationQuery,
-        result: data,
         timestamp: new Date().toISOString(),
+        result: data,
       };
-      setHistory(prevHistory => [newHistoryItem, ...prevHistory].slice(0, 50));
+      
+      const updatedHistory = [newHistoryItem, ...history];
+      setHistory(updatedHistory);
+      saveHistory(updatedHistory);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
-  
+  }, [history]);
+
   const handleFormSubmit = useCallback(() => {
     handleSimulate(userInput);
   }, [userInput, handleSimulate]);
 
+  // History handlers
   const handleViewHistory = (item: SimulationHistoryItem) => {
-    setError(null);
+    if (isLoading) return;
     setCareerPathData(item.result);
     setUserInput(item.query);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setError(null);
+    window.scrollTo(0, 0);
+  };
+  
+  const handleEditHistory = (item: SimulationHistoryItem) => {
+    if (isLoading) return;
+    setUserInput(item.query);
+    setCareerPathData(null); // Clear current view to avoid confusion
+    document.querySelector('input')?.focus();
+    window.scrollTo(0, 0);
   };
 
-  const handleResimulate = (item: SimulationHistoryItem) => {
-    setUserInput(item.query);
-    handleSimulate(item.query);
-  };
-  
   const handleDeleteHistory = (id: string) => {
-    setHistory(prev => prev.filter(item => item.id !== id));
+    const updatedHistory = history.filter(item => item.id !== id);
+    setHistory(updatedHistory);
+    saveHistory(updatedHistory);
   };
-  
+
   const handleClearHistory = () => {
-    setHistory([]);
+    if (window.confirm('Anda yakin ingin menghapus semua riwayat simulasi?')) {
+      setHistory([]);
+      saveHistory([]);
+    }
   };
 
   return (
@@ -114,7 +113,7 @@ const App: React.FC = () => {
           <HistoryList 
             items={history}
             onView={handleViewHistory}
-            onResimulate={handleResimulate}
+            onEdit={handleEditHistory}
             onDelete={handleDeleteHistory}
             onClear={handleClearHistory}
             disabled={isLoading}

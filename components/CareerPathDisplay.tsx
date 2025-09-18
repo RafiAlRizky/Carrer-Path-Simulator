@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import type { CareerPath } from '../types';
 import SectionCard from './SectionCard';
 import SkillTree from './SkillTree';
@@ -14,32 +15,6 @@ interface CareerPathDisplayProps {
 }
 
 const CareerPathDisplay: React.FC<CareerPathDisplayProps> = ({ data }) => {
-  const [endorsedSkills, setEndorsedSkills] = useState<string[]>(() => {
-    try {
-      const savedSkills = localStorage.getItem('endorsedSkills');
-      return savedSkills ? JSON.parse(savedSkills) : [];
-    } catch (error) {
-      console.error("Failed to parse endorsed skills from localStorage", error);
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('endorsedSkills', JSON.stringify(endorsedSkills));
-    } catch (error) {
-      console.error("Failed to save endorsed skills to localStorage", error);
-    }
-  }, [endorsedSkills]);
-
-  const handleEndorseSkill = (skillToEndorse: string) => {
-    setEndorsedSkills(prevSkills =>
-      prevSkills.includes(skillToEndorse)
-        ? prevSkills.filter(skill => skill !== skillToEndorse)
-        : [...prevSkills, skillToEndorse]
-    );
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
       <SectionCard title="Ringkasan Jalur Karir" icon={<BriefcaseIcon />}>
@@ -47,11 +22,7 @@ const CareerPathDisplay: React.FC<CareerPathDisplayProps> = ({ data }) => {
       </SectionCard>
 
       <SectionCard title="Peta Kompetensi (Skill Map)" icon={<SitemapIcon />}>
-        <SkillTree 
-          skills={data.skills} 
-          endorsedSkills={endorsedSkills}
-          onEndorse={handleEndorseSkill}
-        />
+        <SkillTree skills={data.skills} />
       </SectionCard>
       
       <SectionCard title="Timeline Perjalanan Karir" icon={<TimelineIcon />}>

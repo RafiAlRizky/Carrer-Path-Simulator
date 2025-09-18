@@ -4,15 +4,16 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 
-// Your web app's Firebase configuration
+// IMPORTANT: Replace this with your web app's Firebase configuration.
+// You can get this from the Firebase console for your project.
 const firebaseConfig = {
-    apiKey: "AIzaSyDDzoRdnHEE4zuMGymz78v_-XdYVcHF0VQ",
-    authDomain: "carrer-path-simulator.firebaseapp.com",
-    projectId: "carrer-path-simulator",
-    storageBucket: "carrer-path-simulator.appspot.com",
-    messagingSenderId: "125958136938",
-    appId: "1:125958136938:web:b6526b3526aa4c0f1dd613",
-    measurementId: "G-RM53MD5YNE"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID",
+    measurementId: "YOUR_MEASUREMENT_ID"
 };
 
 // Initialize Firebase, preventing re-initialization
@@ -21,6 +22,6 @@ if (!firebase.apps.length) {
 }
 
 // Export services using v8 syntax
-export const auth = firebase.auth();
 export const firestore = firebase.firestore();
-export const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+export const auth = firebase.auth();
+export const googleProvider = new firebase.auth.GoogleAuthProvider();

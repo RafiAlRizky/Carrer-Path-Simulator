@@ -8,13 +8,13 @@ import { TrashIcon } from './icons/TrashIcon';
 interface HistoryListProps {
   items: SimulationHistoryItem[];
   onView: (item: SimulationHistoryItem) => void;
-  onResimulate: (item: SimulationHistoryItem) => void;
+  onEdit: (item: SimulationHistoryItem) => void;
   onDelete: (id: string) => void;
   onClear: () => void;
   disabled: boolean;
 }
 
-const HistoryList: React.FC<HistoryListProps> = ({ items, onView, onResimulate, onDelete, onClear, disabled }) => {
+const HistoryList: React.FC<HistoryListProps> = ({ items, onView, onEdit, onDelete, onClear, disabled }) => {
   if (items.length === 0) {
     return null; // Don't render anything if history is empty
   }
@@ -41,19 +41,19 @@ const HistoryList: React.FC<HistoryListProps> = ({ items, onView, onResimulate, 
           Bersihkan Riwayat
         </button>
       </div>
-      <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 space-y-3">
+      <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 space-y-3 max-h-96 overflow-y-auto">
         {items.map((item) => (
           <div
             key={item.id}
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-900/60 rounded-md gap-4"
           >
-            <div className="flex-grow">
+            <div className="flex-grow min-w-0">
               <p className="font-semibold text-indigo-300 truncate" title={item.query}>
                 {item.query}
               </p>
               <p className="text-xs text-gray-500">{formatDate(item.timestamp)}</p>
             </div>
-            <div className="flex items-center gap-2 self-end sm:self-center">
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                <button
                 onClick={() => onView(item)}
                 title="Lihat Lagi"
@@ -63,8 +63,8 @@ const HistoryList: React.FC<HistoryListProps> = ({ items, onView, onResimulate, 
                 <EyeIcon className="w-5 h-5" />
               </button>
               <button
-                onClick={() => onResimulate(item)}
-                title="Simulasi Ulang"
+                onClick={() => onEdit(item)}
+                title="Edit & Simulasi Ulang"
                 disabled={disabled}
                 className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >

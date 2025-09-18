@@ -2,8 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
-// Hardcoded the API key provided by the user to resolve the deployment error.
-const API_KEY = "AIzaSyCGKPZI4kiGM52W4Xy1e6WmJ-uctlodHbA";
+// Initialize the Google AI client once with the API key from environment variables.
+// This is more secure and efficient than creating a new instance for each request.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.
@@ -83,7 +84,6 @@ const schema = {
 };
 
 export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -108,6 +108,9 @@ export const simulateCareerPath = async (userInput: string): Promise<CareerPath>
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
+    if (error instanceof Error && error.message.includes('PERMISSION_DENIED')) {
+      throw new Error("Izin API ditolak. Pastikan API Key Anda valid dan Gemini API telah diaktifkan untuk proyek Anda.");
+    }
     throw new Error("Gagal menyimulasikan jalur karir. AI mungkin sedang sibuk atau permintaan tidak dapat diproses. Silakan coba lagi nanti.");
   }
 };

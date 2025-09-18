@@ -4,6 +4,7 @@ import { firestore } from '../firebase';
 import type { SimulationHistoryItem } from '../types';
 
 const HISTORY_COLLECTION = 'simulations';
+const USERS_COLLECTION = 'users';
 
 type NewHistoryData = Omit<SimulationHistoryItem, 'id'>;
 
@@ -22,9 +23,12 @@ export const getUserHistory = async (userId: string): Promise<SimulationHistoryI
 };
 
 // Add a new item to history
-export const addSimulationToHistory = async (data: NewHistoryData): Promise<string> => {
+export const addSimulationToHistory = async (userId: string, data: NewHistoryData): Promise<string> => {
   const historyCollection = firestore.collection(HISTORY_COLLECTION);
-  const docRef = await historyCollection.add(data);
+  const docRef = await historyCollection.add({
+    ...data,
+    userId: userId, // Associate the record with the user
+  });
   return docRef.id;
 };
 
@@ -50,4 +54,23 @@ export const clearUserHistory = async (userId: string): Promise<void> => {
     });
     
     await batch.commit();
+};
+
+// Get user's endorsed skills
+export const getEndorsedSkills = async (userId: string): Promise<string[]> => {
+  const userDocRef = firestore.collection(USERS_COLLECTION).doc(userId);
+  const doc = await userDocRef.get();
+  if (doc.exists) {
+    const data = doc.data();
+    if (data && Array.isArray(data.endorsedSkills)) {
+      return data.endorsedSkills;
+    }
+  }
+  return [];
+};
+
+// Update user's endorsed skills
+export const updateEndorsedSkills = async (userId: string, skills: string[]): Promise<void> => {
+  const userDocRef = firestore.collection(USERS_COLLECTION).doc(userId);
+  await userDocRef.set({ endorsedSkills: skills }, { merge: true });
 };
