@@ -11,8 +11,12 @@ import ErrorMessage from './components/ErrorMessage';
 import Welcome from './components/Welcome';
 import HistoryList from './components/HistoryList';
 
-// App no longer needs props since user auth is removed
-const App: React.FC = () => {
+interface AppProps {
+  apiKey: string;
+}
+
+// App now accepts apiKey as a prop
+const App: React.FC<AppProps> = ({ apiKey }) => {
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -43,7 +47,8 @@ const App: React.FC = () => {
     window.scrollTo(0, 0); // Scroll to top for better UX
 
     try {
-      const data = await simulateCareerPath(simulationQuery);
+      // Pass the apiKey to the service function
+      const data = await simulateCareerPath(simulationQuery, apiKey);
       setCareerPathData(data);
       
       const newHistoryData: Omit<SimulationHistoryItem, 'id'> = {
@@ -63,7 +68,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [apiKey]); // Add apiKey to dependency array
 
   const handleFormSubmit = useCallback(() => {
     handleSimulate(userInput);
