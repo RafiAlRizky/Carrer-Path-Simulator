@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
@@ -10,8 +9,14 @@ import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import Welcome from './components/Welcome';
 import HistoryList from './components/HistoryList';
+import ConfigurationError from './components/ConfigurationError';
 
 const App: React.FC = () => {
+  // Check for API Key configuration first. This is crucial for deployment environments.
+  if (!process.env.API_KEY || process.env.API_KEY === "") {
+    return <ConfigurationError />;
+  }
+
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);

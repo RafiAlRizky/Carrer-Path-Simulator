@@ -1,4 +1,3 @@
-
 // FIX: Switched to Firebase v8 namespaced API using compat libraries to resolve module export errors with Firebase v9+.
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
@@ -16,10 +15,12 @@ const firebaseConfig = {
     measurementId: "YOUR_MEASUREMENT_ID"
 };
 
-// Initialize Firebase, preventing re-initialization
-if (!firebase.apps.length) {
+// Initialize Firebase, preventing re-initialization.
+// FIX: Added a guard to prevent initialization with placeholder credentials, which crashes the app on deployment.
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY" && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
+
 
 // Export services using v8 syntax
 export const firestore = firebase.firestore();
