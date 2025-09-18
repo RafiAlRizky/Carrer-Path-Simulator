@@ -14,19 +14,19 @@ import ConfigurationError from './components/ConfigurationError';
 
 // App no longer needs props since user auth is removed
 const App: React.FC = () => {
-  // Check for API Key configuration first.
-  let apiKey: string | undefined;
+  // Try to get API key from environment variables first.
+  let envApiKey: string | undefined;
   try {
-    apiKey = process.env.API_KEY;
+    envApiKey = process.env.API_KEY;
   } catch (e) {
-    // This will happen if 'process' is not defined, e.g., in a browser environment without a bundler.
-    apiKey = undefined;
-  }
-  
-  if (!apiKey || apiKey === "") {
-    return <ConfigurationError />;
+    envApiKey = undefined;
   }
 
+  // Allow user to set a temporary key for the session.
+  const [sessionApiKey, setSessionApiKey] = useState<string | null>(null);
+  
+  const effectiveApiKey = envApiKey || sessionApiKey;
+  
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -46,6 +46,11 @@ const App: React.FC = () => {
   }, []);
 
   const handleSimulate = useCallback(async (simulationQuery: string) => {
+    if (!effectiveApiKey) {
+      setError('API Key is not configured.');
+      return;
+    }
+    
     if (!simulationQuery.trim()) {
       setError('Please enter a career path or interest to simulate.');
       return;
@@ -57,7 +62,7 @@ const App: React.FC = () => {
     window.scrollTo(0, 0); // Scroll to top for better UX
 
     try {
-      const data = await simulateCareerPath(simulationQuery);
+      const data = await simulateCareerPath(simulationQuery, effectiveApiKey);
       setCareerPathData(data);
       
       const newHistoryData: Omit<SimulationHistoryItem, 'id'> = {
@@ -73,11 +78,15 @@ const App: React.FC = () => {
       setHistory(prevHistory => [newHistoryItem, ...prevHistory]);
 
     } catch (err) {
+       // If API key is invalid, reset session key so the user can enter a new one.
+      if (err instanceof Error && (err.message.includes('API Key Anda valid') || err.message.includes('Izin API ditolak'))) {
+          setSessionApiKey(null);
+      }
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, [history]);
+  }, [effectiveApiKey]);
 
   const handleFormSubmit = useCallback(() => {
     handleSimulate(userInput);
@@ -122,6 +131,10 @@ const App: React.FC = () => {
       }
     }
   };
+
+  if (!effectiveApiKey) {
+    return <ConfigurationError onKeySubmit={setSessionApiKey} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">

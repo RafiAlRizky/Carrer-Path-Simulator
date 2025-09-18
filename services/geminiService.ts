@@ -1,19 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { CareerPath } from '../types';
 
-// Initialize the Google AI client once with the API key from environment variables.
-let ai: GoogleGenAI | null = null;
-try {
-  const apiKey = process.env.API_KEY;
-  if (apiKey) {
-    ai = new GoogleGenAI({ apiKey: apiKey });
-  }
-} catch (e) {
-  // `process` is not defined in this environment.
-  // The app will show a configuration error screen.
-  console.warn("Could not initialize Gemini AI: process.env.API_KEY is not accessible.");
-}
-
 const systemInstruction = `
 Anda adalah Career Path Simulator, sebuah alat yang membantu pengguna menjelajahi kemungkinan jalur karir dari berbagai latar belakang, minat, dan keterampilan.
 Tugas Anda adalah memberikan jawaban dalam format JSON yang terstruktur sesuai skema yang diberikan, berdasarkan input dari pengguna.
@@ -91,10 +78,13 @@ const schema = {
   required: ['summary', 'skills', 'timeline', 'prospects', 'alternatives', 'tips']
 };
 
-export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
-  if (!ai) {
-    throw new Error("Klien Gemini AI tidak diinisialisasi. Periksa konfigurasi API Key Anda di environment variables.");
+export const simulateCareerPath = async (userInput: string, apiKey: string): Promise<CareerPath> => {
+  if (!apiKey) {
+    throw new Error("API Key tidak tersedia. Mohon konfigurasikan API Key Anda.");
   }
+  
+  // Initialize the client here, with the provided key.
+  const ai = new GoogleGenAI({ apiKey });
   
   try {
     const response = await ai.models.generateContent({
@@ -120,7 +110,7 @@ export const simulateCareerPath = async (userInput: string): Promise<CareerPath>
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    if (error instanceof Error && (error.message.includes('PERMISSION_DENIED') || error.message.includes('API key'))) {
+    if (error instanceof Error && (error.message.includes('API key not valid') || error.message.includes('PERMISSION_DENIED') || error.message.includes('API key'))) {
       throw new Error("Izin API ditolak. Pastikan API Key Anda valid dan Gemini API telah diaktifkan untuk proyek Anda.");
     }
     throw new Error("Gagal menyimulasikan jalur karir. AI mungkin sedang sibuk atau permintaan tidak dapat diproses. Silakan coba lagi nanti.");
