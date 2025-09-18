@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import type { CareerPath, SimulationHistoryItem } from './types';
 import { simulateCareerPath } from './services/geminiService';
-// Import from local storage service instead of firestore
 import { getHistory, addSimulationToHistory, deleteHistoryItem, clearHistory } from './services/localStorageService';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
@@ -15,7 +14,6 @@ interface AppProps {
   apiKey: string;
 }
 
-// App now accepts apiKey as a prop
 const App: React.FC<AppProps> = ({ apiKey }) => {
   const [userInput, setUserInput] = useState<string>('');
   const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
@@ -24,8 +22,6 @@ const App: React.FC<AppProps> = ({ apiKey }) => {
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
 
   useEffect(() => {
-    // Load history from localStorage on initial render.
-    // This is now a synchronous operation.
     try {
         const localHistory = getHistory();
         setHistory(localHistory);
@@ -44,10 +40,9 @@ const App: React.FC<AppProps> = ({ apiKey }) => {
     setIsLoading(true);
     setError(null);
     setCareerPathData(null);
-    window.scrollTo(0, 0); // Scroll to top for better UX
+    window.scrollTo(0, 0);
 
     try {
-      // Pass the apiKey to the service function
       const data = await simulateCareerPath(simulationQuery, apiKey);
       setCareerPathData(data);
       
@@ -57,10 +52,8 @@ const App: React.FC<AppProps> = ({ apiKey }) => {
         result: data,
       };
 
-      // Add to local storage history
       const newHistoryItem = addSimulationToHistory(newHistoryData);
       
-      // No need to re-read from storage, just update state
       setHistory(prevHistory => [newHistoryItem, ...prevHistory]);
 
     } catch (err) {
@@ -68,13 +61,12 @@ const App: React.FC<AppProps> = ({ apiKey }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey]); // Add apiKey to dependency array
+  }, [apiKey]);
 
   const handleFormSubmit = useCallback(() => {
     handleSimulate(userInput);
   }, [userInput, handleSimulate]);
 
-  // History handlers
   const handleViewHistory = (item: SimulationHistoryItem) => {
     if (isLoading) return;
     setCareerPathData(item.result);
@@ -86,7 +78,7 @@ const App: React.FC<AppProps> = ({ apiKey }) => {
   const handleEditHistory = (item: SimulationHistoryItem) => {
     if (isLoading) return;
     setUserInput(item.query);
-    setCareerPathData(null); // Clear current view to avoid confusion
+    setCareerPathData(null);
     document.querySelector('input')?.focus();
     window.scrollTo(0, 0);
   };
