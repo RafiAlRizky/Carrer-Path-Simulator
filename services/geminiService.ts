@@ -78,12 +78,12 @@ const schema = {
   required: ['summary', 'skills', 'timeline', 'prospects', 'alternatives', 'tips']
 };
 
-export const simulateCareerPath = async (userInput: string, apiKey: string): Promise<CareerPath> => {
+export const simulateCareerPath = async (userInput: string): Promise<CareerPath> => {
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API Key tidak tersedia. Mohon konfigurasikan API Key Anda.");
+    throw new Error("API Key tidak dikonfigurasi. Harap atur variabel lingkungan API_KEY di platform hosting Anda.");
   }
   
-  // Initialize the client here, with the provided key.
   const ai = new GoogleGenAI({ apiKey });
   
   try {
