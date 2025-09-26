@@ -4,7 +4,14 @@ import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { SitemapIcon } from './icons/SitemapIcon';
 import { TrendingUpIcon } from './icons/TrendingUpIcon';
 
-const FeatureCard = ({ icon, title, children, delay }: { icon: React.ReactNode, title: string, children: React.ReactNode, delay: number }) => (
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+  delay: number;
+}
+
+const FeatureCard = ({ icon, title, children, delay }: FeatureCardProps) => (
     <div
       className="bg-gray-800/60 p-4 rounded-lg border border-gray-700/80 flex items-start space-x-4 animate-fade-in-up"
       style={{ animationDelay: `${delay}s` }}
@@ -37,6 +44,7 @@ const Welcome: React.FC = () => {
             <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <h3 className="text-xl font-bold text-center text-white mb-6">Fitur Unggulan</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* FIX: Add missing children prop to FeatureCard components */}
                     <FeatureCard
                         icon={<BriefcaseIcon className="w-6 h-6" />}
                         title="Simulasi Karir Komprehensif"

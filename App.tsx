@@ -1,139 +1,204 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import type { CareerPath, SimulationHistoryItem } from './types';
-import { simulateCareerPath } from './services/geminiService';
-import { getHistory, addSimulationToHistory, deleteHistoryItem, clearHistory } from './services/localStorageService';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
-import CareerPathDisplay from './components/CareerPathDisplay';
+import Welcome from './components/Welcome';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
-import Welcome from './components/Welcome';
+import CareerPathDisplay from './components/CareerPathDisplay';
 import HistoryList from './components/HistoryList';
+import ComparisonDisplay from './components/ComparisonDisplay';
+
+import { initializeGemini, generateCareerPath, compareCareerPaths } from './services/geminiService';
+import { getHistory, saveHistory } from './services/localStorageService';
+import type { CareerPath, SimulationHistoryItem, ComparisonSummary } from './types';
 
 interface AppProps {
   apiKey: string;
 }
 
+type ViewState = 'welcome' | 'loading' | 'error' | 'result' | 'comparison';
+
 const App: React.FC<AppProps> = ({ apiKey }) => {
-  const [userInput, setUserInput] = useState<string>('');
-  const [careerPathData, setCareerPathData] = useState<CareerPath | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [userInput, setUserInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<ViewState>('welcome');
+  
+  const [simulationResult, setSimulationResult] = useState<CareerPath | null>(null);
+  const [comparisonResult, setComparisonResult] = useState<ComparisonSummary | null>(null);
   const [history, setHistory] = useState<SimulationHistoryItem[]>([]);
+  const [comparisonSelection, setComparisonSelection] = useState<string[]>([]);
+  const [currentQuery, setCurrentQuery] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    try {
-        const localHistory = getHistory();
-        setHistory(localHistory);
-    } catch (err) {
-        setError("Gagal memuat riwayat simulasi dari penyimpanan lokal.");
-        console.error(err);
-    }
-  }, []);
+    initializeGemini(apiKey);
+    const loadedHistory = getHistory();
+    setHistory(loadedHistory);
+    setIsMounted(true);
+  }, [apiKey]);
 
-  const handleSimulate = useCallback(async (simulationQuery: string) => {
-    if (!simulationQuery.trim()) {
-      setError('Please enter a career path or interest to simulate.');
-      return;
+  useEffect(() => {
+    if (isMounted) {
+      saveHistory(history);
     }
+  }, [history, isMounted]);
+
+  const handleSimulate = async (query: string) => {
+    if (!query.trim()) return;
 
     setIsLoading(true);
     setError(null);
-    setCareerPathData(null);
-    window.scrollTo(0, 0);
+    setCurrentView('loading');
+    setComparisonSelection([]); // Reset comparison on new simulation
 
     try {
-      const data = await simulateCareerPath(simulationQuery, apiKey);
-      setCareerPathData(data);
+      const result = await generateCareerPath(query);
       
-      const newHistoryData: Omit<SimulationHistoryItem, 'id'> = {
-        query: simulationQuery,
+      const newHistoryItem: SimulationHistoryItem = {
+        id: new Date().toISOString(),
+        query,
+        result,
         timestamp: new Date().toISOString(),
-        result: data,
       };
 
-      const newHistoryItem = addSimulationToHistory(newHistoryData);
-      
-      setHistory(prevHistory => [newHistoryItem, ...prevHistory]);
+      setSimulationResult(result);
+      setCurrentQuery(query);
+      setHistory(prev => [newHistoryItem, ...prev]);
+      setCurrentView('result');
+      setUserInput('');
 
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan yang tidak diketahui.');
+      setCurrentView('error');
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey]);
+  };
 
-  const handleFormSubmit = useCallback(() => {
-    handleSimulate(userInput);
-  }, [userInput, handleSimulate]);
+  const handleCompare = async () => {
+    if (comparisonSelection.length !== 2) return;
+
+    const item1 = history.find(h => h.id === comparisonSelection[0]);
+    const item2 = history.find(h => h.id === comparisonSelection[1]);
+
+    if (!item1 || !item2) return;
+
+    setIsLoading(true);
+    setError(null);
+    setCurrentView('loading');
+
+    try {
+        const result = await compareCareerPaths(
+            { query: item1.query, data: item1.result },
+            { query: item2.query, data: item2.result }
+        );
+        setComparisonResult(result);
+        setCurrentView('comparison');
+    } catch (err: any) {
+        setError(err.message || 'Gagal membandingkan jalur karir.');
+        setCurrentView('error');
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
   const handleViewHistory = (item: SimulationHistoryItem) => {
-    if (isLoading) return;
-    setCareerPathData(item.result);
-    setUserInput(item.query);
+    setSimulationResult(item.result);
+    setCurrentQuery(item.query);
+    setCurrentView('result');
     setError(null);
     window.scrollTo(0, 0);
   };
   
   const handleEditHistory = (item: SimulationHistoryItem) => {
-    if (isLoading) return;
     setUserInput(item.query);
-    setCareerPathData(null);
-    document.querySelector('input')?.focus();
-    window.scrollTo(0, 0);
-  };
-
-  const handleDeleteHistory = (id: string) => {
-    try {
-      deleteHistoryItem(id);
-      const updatedHistory = history.filter(item => item.id !== id);
-      setHistory(updatedHistory);
-    } catch (e) {
-      console.error("Failed to delete history item:", e);
-      setError("Gagal menghapus item riwayat. Silakan coba lagi.");
+    // Focus the input element
+    const input = document.querySelector('input[type="text"]');
+    if (input) {
+      (input as HTMLInputElement).focus();
     }
   };
 
+  const handleDeleteHistory = (id: string) => {
+    setHistory(prev => prev.filter(item => item.id !== id));
+    setComparisonSelection(prev => prev.filter(selId => selId !== id));
+  };
+  
   const handleClearHistory = () => {
-    if (window.confirm('Anda yakin ingin menghapus semua riwayat simulasi?')) {
-      try {
-        clearHistory();
-        setHistory([]);
-      } catch(e) {
-        console.error("Failed to clear history:", e);
-        setError("Gagal membersihkan riwayat. Silakan coba lagi.");
-      }
+    setHistory([]);
+    setComparisonSelection([]);
+    saveHistory([]); // also clear from storage immediately
+  };
+  
+  const handleToggleComparisonSelection = (id: string) => {
+    setComparisonSelection(prev => {
+        if (prev.includes(id)) {
+            return prev.filter(selectedId => selectedId !== id);
+        }
+        if (prev.length < 2) {
+            return [...prev, id];
+        }
+        return prev;
+    });
+  };
+
+  const renderContent = () => {
+    switch (currentView) {
+      case 'loading':
+        return <LoadingSpinner />;
+      case 'error':
+        return <ErrorMessage message={error || 'Terjadi kesalahan.'} />;
+      case 'result':
+        if (simulationResult) {
+          return (
+            <>
+              <h2 className="text-3xl font-bold text-center text-white mb-6 animate-fade-in">{`Simulasi untuk: "${currentQuery}"`}</h2>
+              <CareerPathDisplay data={simulationResult} />
+            </>
+          );
+        }
+        return <Welcome />;
+      case 'comparison':
+          if (comparisonResult) {
+              return <ComparisonDisplay data={comparisonResult} onBack={() => { setCurrentView('welcome'); setComparisonSelection([]); }} />;
+          }
+          return <Welcome />;
+      case 'welcome':
+      default:
+        return <Welcome />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
+    <div className="bg-gray-900 text-gray-200 min-h-screen font-sans">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Header />
         <main>
-          <InputForm
-            userInput={userInput}
-            setUserInput={setUserInput}
-            onSimulate={handleFormSubmit}
-            isLoading={isLoading}
-          />
-          <div className="mt-8">
-            {isLoading && <LoadingSpinner />}
-            {error && <ErrorMessage message={error} />}
-            {careerPathData ? (
-              <CareerPathDisplay data={careerPathData} />
-            ) : (
-              !isLoading && !error && <Welcome />
-            )}
+          <div className="mb-8">
+            <InputForm
+              userInput={userInput}
+              setUserInput={setUserInput}
+              onSimulate={() => handleSimulate(userInput)}
+              isLoading={isLoading}
+            />
           </div>
-          <HistoryList 
-            items={history}
-            onView={handleViewHistory}
-            onEdit={handleEditHistory}
-            onDelete={handleDeleteHistory}
-            onClear={handleClearHistory}
-            disabled={isLoading}
-          />
+
+          {renderContent()}
+
+          {currentView !== 'comparison' && history.length > 0 && (
+            <HistoryList
+                items={history}
+                onView={handleViewHistory}
+                onEdit={handleEditHistory}
+                onDelete={handleDeleteHistory}
+                onClear={handleClearHistory}
+                disabled={isLoading}
+                comparisonSelection={comparisonSelection}
+                onToggleSelection={handleToggleComparisonSelection}
+                onCompare={handleCompare}
+            />
+          )}
         </main>
       </div>
     </div>
