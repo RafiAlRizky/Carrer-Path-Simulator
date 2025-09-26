@@ -43,8 +43,8 @@ const Welcome: React.FC = () => {
             
             <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                 <h3 className="text-xl font-bold text-center text-white mb-6">Fitur Unggulan</h3>
+                {/* FIX: The following FeatureCard components were missing the required 'children' prop. This has been corrected by providing content for each. */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* FIX: Add missing children prop to FeatureCard components */}
                     <FeatureCard
                         icon={<BriefcaseIcon className="w-6 h-6" />}
                         title="Simulasi Karir Komprehensif"

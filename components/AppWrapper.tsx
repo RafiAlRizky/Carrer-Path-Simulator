@@ -2,15 +2,16 @@ import React from 'react';
 import App from '../App';
 import ConfigurationError from './ConfigurationError';
 
-// FIX: Per the guidelines, the API key must come exclusively from `process.env.API_KEY`.
-// The UI for submitting a key has been removed.
 const AppWrapper: React.FC = () => {
-    if (!process.env.API_KEY) {
-        // FIX: The onKeySubmit prop is removed from ConfigurationError as there is no longer a user-facing key submission form.
+    // FIX: Use optional chaining to prevent a crash when `import.meta.env` is undefined.
+    // Fall back to process.env.API_KEY for broader environment compatibility.
+    const apiKey = (import.meta as any).env?.VITE_API_KEY || process.env.API_KEY;
+
+    if (!apiKey) {
         return <ConfigurationError />;
     }
     
-    return <App apiKey={process.env.API_KEY} />;
+    return <App apiKey={apiKey} />;
 };
 
 export default AppWrapper;
