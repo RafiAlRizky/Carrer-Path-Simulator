@@ -1,20 +1,13 @@
+<h1 align="center">Hi, I'm Muhammad Rafi Al Rizky</h1>
+<h3 align="center">Student Who Need To Learn 🐧</h3>
+
+<br><br>
+
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <img src="https://user-images.githubusercontent.com/22107794/139580686-887df369-edb8-4bc8-b607-4fbf6d7e4866.gif">
+
+<div align="center">
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=rafialrizky&layout=compact&theme=dracula" />
+  <img src="https://github-readme-stats.vercel.app/api?username=rafialrizky&layout=compact&theme=dracula" />
 </div>
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/15MFB1vnxq76UgAFsLKN-vmdUDTP_wf2z
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
